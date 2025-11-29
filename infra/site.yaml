@@ -1,0 +1,8 @@
+- hosts: servers
+  become: true
+
+  roles:
+    - common
+    - docker
+    - kubernetes
+    - jenkins
