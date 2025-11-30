@@ -1,0 +1,96 @@
+---
+# Update environment
+- name: Update apt cache
+  apt:
+    update_cache: yes
+    force_apt_get: yes
+
+- name: Upgrade all packages
+  apt:
+    upgrade: dist
+    force_apt_get: yes
+
+# Disable swap (required for Kubernetes)
+- name: Disable swap
+  command: swapoff -a
+
+- name: Remove swap entry in /etc/fstab
+  replace:
+    path: /etc/fstab
+    regexp: '(^.*swap.*$)'
+    replace: '# \1'
+
+# Install basic dependencies
+- name: Install dependencies
+  apt:
+    name:
+      - curl
+      - git
+      - apt-transport-https
+      - ca-certificates
+      - software-properties-common
+      - gnupg
+      - ufw
+    state: present
+
+# Create devops user
+- name: Create devops user
+  user:
+    name: devops
+    groups: sudo
+    shell: /bin/bash
+    state: present
+    append: yes
+
+# Add SSH public key to devops
+- name: Create .ssh directory
+  file:
+    path: /home/devops/.ssh
+    state: directory
+    owner: devops
+    group: devops
+    mode: '0700'
+
+- name: Add authorized key
+  copy:
+    src: ~/.ssh/id_rsa.pub
+    dest: /home/devops/.ssh/authorized_keys
+    owner: devops
+    group: devops
+    mode: '0600'
+
+# Configure UFW Firewall
+- name: Allow OpenSSH
+  ufw:
+    rule: allow
+    name: OpenSSH
+
+- name: Allow HTTP
+  ufw:
+    rule: allow
+    port: '80'
+    proto: tcp
+
+- name: Allow Jenkins           ###allow jenkins port
+  ufw:
+    rule: allow
+    port: '8080'
+    proto: tcp
+
+- name: Allow HTTPS
+  ufw:
+    rule: allow
+    port: '443'
+    proto: tcp
+
+# Kubernetes ports
+- name: Allow Kubernetes API Server
+  ufw:
+    rule: allow
+    port: '6443'
+    proto: tcp
+
+- name: Enable UFW
+  ufw:
+    state: enabled
+    policy: allow
