@@ -1,0 +1,65 @@
+---
+- name: Ensure swap is disabled
+  command: swapoff -a
+  ignore_errors: yes
+
+- name: Comment out swap in fstab
+  replace:
+    path: /etc/fstab
+    regexp: '^(.*swap.*)$'
+    replace: '# \1'
+
+- name: Update apt cache
+  apt:
+    update_cache: yes
+    force_apt_get: yes
+
+- name: Install required packages
+  apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg
+      - lsb-release
+    state: present
+
+- name: Enable kubelet service
+  systemd:
+    name: kubelet
+    enabled: yes
+    state: started
+
+- name: Initialize Kubernetes cluster
+  command: >
+    kubeadm init
+    --apiserver-advertise-address={{ ansible_default_ipv4.address }}
+    --pod-network-cidr={{ pod_network_cidr }}
+  args:
+    creates: /etc/kubernetes/admin.conf
+  register: kubeadm_init
+
+- name: Create .kube directory for devops user
+  file:
+    path: /home/devops/.kube
+    state: directory
+    owner: devops
+    group: devops
+    mode: 0700
+
+- name: Copy admin kubeconfig for devops user
+  copy:
+    src: /etc/kubernetes/admin.conf
+    dest: /home/devops/.kube/config
+    owner: devops
+    group: devops
+    mode: 0644
+    remote_src: yes
+
+- name: Install Calico network plugin as devops user
+  become: yes
+  become_user: devops
+  shell: |
+    kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/{{ calico_version }}/manifests/calico.yaml
+  args:
+    executable: /bin/bash

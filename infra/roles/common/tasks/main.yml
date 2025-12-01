@@ -32,16 +32,20 @@
       - gnupg
       - ufw
     state: present
-
-# Create devops user
-- name: Create devops user
+- name: Create deploy user
   user:
     name: devops
     groups: sudo
     shell: /bin/bash
     state: present
-    append: yes
 
+- name: Give devops user passwordless sudo
+  copy:
+    dest: /etc/sudoers.d/devops
+    content: "devops ALL=(ALL) NOPASSWD:ALL\n"
+    owner: root
+    group: root
+    mode: '0440'
 # Add SSH public key to devops
 - name: Create .ssh directory
   file:
