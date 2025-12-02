@@ -36,9 +36,13 @@ USER appuser
 # Expose application port
 EXPOSE 3000
 
+# Set default environment variable (can be overridden)
+ENV NODE_ENV=development
+ENV PORT=3000
+
 # Health check endpoint (adjust path to match your app)
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD curl -f http://localhost:3000/health || exit 1
+  CMD curl -f http://localhost:${PORT}/health || exit 1
 
 # Start the application
 CMD ["npm", "start"]
