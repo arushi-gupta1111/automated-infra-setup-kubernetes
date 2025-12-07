@@ -47,6 +47,24 @@
     mode: 0644
     remote_src: yes
 
+
+- name: Create .kube directory for jenkins user
+  file:
+    path: /var/lib/jenkins/.kube
+    state: directory
+    owner: jenkins
+    group: jenkins
+    mode: 0700
+
+- name: Copy admin kubeconfig for jenkins user
+  copy:
+    src: /etc/kubernetes/admin.conf
+    dest: /var/lib/jenkins/.kube/config
+    owner: jenkins
+    group: jenkins
+    mode: 0644
+    remote_src: yes
+    
 - name: Install Kube Flannel network plugin as devops user
   become: yes
   become_user: devops
