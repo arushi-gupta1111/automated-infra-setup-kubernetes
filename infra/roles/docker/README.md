@@ -1,38 +1,95 @@
-Role Name
-=========
+# Ansible Role: Docker Installation and Setup
 
-A brief description of the role goes here.
+This Ansible role installs Docker CE on Ubuntu, sets up the necessary user permissions, and runs a test NGINX container.
 
-Requirements
-------------
+## Requirements
 
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+- Ansible 2.9+
+- Ubuntu 18.04 or later
+- `docker-py` Python module (if using `docker_container` module)
 
-Role Variables
---------------
+## Role Variables
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+No variables are required for this role. It uses the system's codename automatically via `ansible_lsb.codename` for the Docker repository.
 
-Dependencies
-------------
+## Tasks
 
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+This role performs the following tasks:
 
-Example Playbook
-----------------
+1. **Add Docker GPG key**  
+   Adds Docker’s official GPG key to ensure package authenticity.
+   ```yaml
+   - name: Add Docker GPG key
+     apt_key:
+       url: https://download.docker.com/linux/ubuntu/gpg
+       state: present
+   ```
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
+2. **Add Docker APT repository**  
+   Adds the Docker stable repository for the detected Ubuntu version.
+   ```yaml
+   - name: Add Docker APT repository
+     apt_repository:
+       repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_lsb.codename }} stable
+   ```
 
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
+3. **Install Docker CE**  
+   Installs Docker CE, Docker CLI, and containerd.
+   ```yaml
+   - name: Install Docker CE
+     apt:
+       name:
+         - docker-ce
+         - docker-ce-cli
+         - containerd.io
+       state: present
+       update_cache: yes
+   ```
 
-License
--------
+4. **Ensure docker group exists**  
+   Creates the `docker` group if it does not exist.
+   ```yaml
+   - name: Ensure docker group exists
+     group:
+       name: docker
+       state: present
+   ```
 
-BSD
+5. **Add user to docker group**  
+   Adds the `devops` user to the `docker` group for Docker command access without `sudo`.
+   ```yaml
+   - name: Add devops user to docker group
+     user:
+       name: devops
+       append: yes
+       groups: docker
+   ```
 
-Author Information
-------------------
+6. **Run test NGINX container**  
+   Runs a test container with NGINX to verify Docker installation.
+   ```yaml
+   - name: Run test nginx container
+     docker_container:
+       name: nginx-test
+       image: nginx
+       ports:
+         - "80:80"
+       state: started
+   ```
 
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
+## Example Playbook
+
+```yaml
+- hosts: all
+  become: yes
+  roles:
+    - docker_install
+```
+
+## License
+
+MIT
+
+## Author
+
+Arushi Gupta
