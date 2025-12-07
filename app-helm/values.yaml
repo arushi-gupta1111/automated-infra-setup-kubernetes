@@ -14,7 +14,7 @@ ingress:
   enabled: true
   className: nginx
   hosts:
-    - host: app.example.com       # Replace with your hostname
+    - host: localhost       # Replace with your hostname
       paths:
         - path: /
           pathType: Prefix
