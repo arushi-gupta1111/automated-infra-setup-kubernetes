@@ -99,7 +99,8 @@
 - name: Remove all taints from a node
   become: yes
   shell: |
-    NODE={{ inventory_hostname }}
+    NODE=$(hostname)
+    echo "Detected Kubernetes node name: $NODE"
     taints=$(kubectl get node $NODE -o jsonpath='{.spec.taints[*].key}' --kubeconfig /etc/kubernetes/admin.conf)
 
     if [ -n "$taints" ]; then
