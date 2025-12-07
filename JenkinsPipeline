@@ -2,9 +2,6 @@ pipeline {
     agent any
 
     environment {
-        // Git commit SHA as version tag
-        GIT_COMMIT_SHORT = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
-        IMAGE_TAG = "${GIT_COMMIT_SHORT}"
         IMAGE_NAME = "15121993/app"
 
         // Kubernetes namespace and Helm release
@@ -26,10 +23,20 @@ pipeline {
             }
         }
 
+        stage('Set Image Tag') {
+            steps {
+                script {
+                    // Compute Git commit SHA after checkout
+                    env.IMAGE_TAG = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
+                    echo "Using image tag: ${env.IMAGE_TAG}"
+                }
+            }
+        }
+
         stage('Build Docker Image') {
             steps {
                 script {
-                    docker.build("${IMAGE_NAME}:${IMAGE_TAG}", "app")
+                    docker.build("${IMAGE_NAME}:${env.IMAGE_TAG}", "app")
                 }
             }
         }
@@ -37,12 +44,9 @@ pipeline {
         stage('Test Docker Image') {
             steps {
                 script {
-                    // Run container in detached mode
-                    sh "docker run -d --name test-app -p 3000:3000 ${IMAGE_NAME}:${IMAGE_TAG}"
-                    sh "sleep 5" // wait for server to start
-                    // Test health endpoint
+                    sh "docker run -d --name test-app -p 3000:3000 ${IMAGE_NAME}:${env.IMAGE_TAG}"
+                    sh "sleep 5"
                     sh "curl -f http://localhost:3000/health || (docker logs test-app && exit 1)"
-                    // Stop and remove container
                     sh "docker stop test-app && docker rm test-app"
                 }
             }
@@ -59,7 +63,7 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 script {
-                    docker.image("${IMAGE_NAME}:${IMAGE_TAG}").push()
+                    docker.image("${IMAGE_NAME}:${env.IMAGE_TAG}").push()
                 }
             }
         }
@@ -72,7 +76,7 @@ pipeline {
                         helm upgrade --install ${HELM_RELEASE} ${HELM_CHART_PATH} \
                           --namespace ${K8S_NAMESPACE} \
                           --set image.repository=${IMAGE_NAME} \
-                          --set image.tag=${IMAGE_TAG}
+                          --set image.tag=${env.IMAGE_TAG}
                         """
                         echo "Deployment successful"
                     } catch (err) {
