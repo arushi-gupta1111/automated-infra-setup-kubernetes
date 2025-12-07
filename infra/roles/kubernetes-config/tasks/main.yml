@@ -95,3 +95,17 @@
     kubectl apply -f https://github.com/flannel-io/flannel/releases/latest/download/kube-flannel.yml
   args:
     executable: /bin/bash
+
+- name: Remove all taints from this node
+  become: yes
+  become_user: root
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+  shell: |
+    taints=$(kubectl get node {{ inventory_hostname }} -o jsonpath='{.spec.taints[*].key}')
+    for t in $taints; do
+      kubectl taint nodes {{ inventory_hostname }} $t-
+    done
+  args:
+    executable: /bin/bash
+
