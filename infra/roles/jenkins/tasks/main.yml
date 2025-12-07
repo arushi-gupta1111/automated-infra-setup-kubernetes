@@ -41,9 +41,26 @@
       - openjdk-21-jre
       - jenkins
     state: present
-
+    
 - name: Ensure Jenkins service is enabled and started
   systemd:
     name: jenkins
     enabled: yes
     state: started
+    
+- name: Ensure docker group exists
+  group:
+	  name: docker
+	  state: present
+
+- name: Add Jenkins user to docker group
+  user:
+    name: jenkins
+	  groups: docker
+	  append: yes
+
+- name: Restart Jenkins service
+  service:
+	  name: jenkins
+	  state: restarted
+
