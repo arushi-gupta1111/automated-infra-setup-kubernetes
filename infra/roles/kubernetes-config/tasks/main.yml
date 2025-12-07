@@ -96,16 +96,20 @@
   args:
     executable: /bin/bash
 
-- name: Remove all taints from this node
+- name: Remove all taints from a node
   become: yes
-  become_user: root
-  environment:
-    KUBECONFIG: /etc/kubernetes/admin.conf
   shell: |
-    taints=$(kubectl get node {{ inventory_hostname }} -o jsonpath='{.spec.taints[*].key}')
-    for t in $taints; do
-      kubectl taint nodes {{ inventory_hostname }} $t-
-    done
+    NODE={{ inventory_hostname }}
+    taints=$(kubectl get node $NODE -o jsonpath='{.spec.taints[*].key}' --kubeconfig /etc/kubernetes/admin.conf)
+
+    if [ -n "$taints" ]; then
+      for t in $taints; do
+        echo "Removing taint $t from node $NODE"
+        kubectl taint nodes $NODE "$t"- --kubeconfig /etc/kubernetes/admin.conf
+      done
+    else
+      echo "No taints found on node $NODE"
+    fi
   args:
     executable: /bin/bash
 
