@@ -1,38 +1,43 @@
-Role Name
-=========
+# Ansible Role: Jenkins Setup with OpenJDK 21
 
-A brief description of the role goes here.
+This Ansible role installs and configures Jenkins on a Debian-based system with **OpenJDK 21**, sets up system-wide `JAVA_HOME`, configures the Jenkins repository securely, and adds Jenkins to the Docker group.
 
-Requirements
-------------
+## Requirements
 
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+- Debian/Ubuntu-based system
+- `ansible` >= 2.9
+- Root or sudo privileges to install packages and modify system files
 
-Role Variables
---------------
+## Role Variables
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+This role does not require any external variables by default. All paths and settings are pre-configured for modern Debian-based systems.
 
-Dependencies
-------------
+- `java_home` – Automatically determined based on installed Java path.
+- Jenkins GPG key and repository URLs are pre-configured.
 
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+## Tasks
 
-Example Playbook
-----------------
+The role performs the following steps:
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
+1. **Install OpenJDK 21 JRE** – Required for running Jenkins.  
+2. **Determine `JAVA_HOME`** – Finds the installed Java path and sets it system-wide in `/etc/profile.d/java_home.sh`.  
+3. **Configure default Java link** – Ensures `/usr/lib/jvm/default-java` points to the correct Java installation.  
+4. **Prepare APT keyrings** – Ensures `/etc/apt/keyrings` exists.  
+5. **Remove old Jenkins sources and keys** – Cleans any previous Jenkins setup.  
+6. **Download Jenkins GPG key** – Secures package downloads from the official Jenkins repository.  
+7. **Add Jenkins repository** – Adds the official Jenkins repository with signed-by configuration.  
+8. **Update APT cache** – Ensures latest package lists.  
+9. **Install Jenkins** – Installs Jenkins along with OpenJDK 21 JRE.  
+10. **Enable and start Jenkins service** – Ensures Jenkins is running on boot.  
+11. **Configure Docker group** – Creates the `docker` group if missing.  
+12. **Add Jenkins user to Docker group** – Grants Jenkins permission to run Docker commands.  
+13. **Restart Jenkins** – Applies all configuration changes.
 
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
+## Example Playbook
 
-License
--------
+```yaml
+- hosts: jenkins_servers
+  become: yes
+  roles:
+    - role: jenkins_setup
 
-BSD
-
-Author Information
-------------------
-
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
