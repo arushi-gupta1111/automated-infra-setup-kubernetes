@@ -1,38 +1,38 @@
-Role Name
-=========
+# Ansible Role: System Setup for Kubernetes & Jenkins Deployment
 
-A brief description of the role goes here.
+This Ansible role prepares a Linux server for use as a **Kubernetes node** or **Jenkins build host** by updating the system, installing essential dependencies, creating a privileged `devops` user, configuring SSH access, and setting up a secure firewall (UFW).
 
-Requirements
-------------
+---
 
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+## Role Overview
 
-Role Variables
---------------
+### Tasks performed:
+1. **System Update**
+   - Updates the APT cache.
+   - Performs a full system upgrade.
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+2. **Kubernetes Prerequisites**
+   - Disables swap (`swapoff -a`).
+   - Comments out swap entries in `/etc/fstab`.
 
-Dependencies
-------------
+3. **Package Installation**
+   - Installs essential packages:
+     ```
+     curl, git, apt-transport-https, ca-certificates,
+     software-properties-common, gnupg, ufw, bridge-utils, groovy
+     ```
 
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+4. **User Configuration**
+   - Creates a `devops` user with sudo privileges.
+   - Configures passwordless sudo.
+   - Adds SSH public key for secure access.
 
-Example Playbook
-----------------
+5. **Firewall Configuration (UFW)**
+   - Allows essential ports:
+     - `22` (OpenSSH)
+     - `80` (HTTP)
+     - `443` (HTTPS)
+     - `8080` (Jenkins)
+     - `6443` (Kubernetes API)
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
 
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
-
-License
--------
-
-BSD
-
-Author Information
-------------------
-
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
