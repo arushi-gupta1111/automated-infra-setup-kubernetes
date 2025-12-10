@@ -59,7 +59,7 @@
 
 - name: Add authorized key
   copy:
-    src: ~/.ssh/id_ed25519.pub
+    src: ~/.ssh/id_rsa.pub
     dest: /home/devops/.ssh/authorized_keys
     owner: devops
     group: devops
