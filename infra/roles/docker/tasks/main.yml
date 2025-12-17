@@ -28,6 +28,23 @@
     append: yes
     groups: docker
 
+- name: Create containerd directory
+  file:
+    path: /etc/containerd
+    state: directory
+    mode: '0755'
+
+- name: Generate default containerd config
+  shell: "containerd config default | tee /etc/containerd/config.toml"
+  args:
+    executable: /bin/bash
+
+- name: Restart containerd service
+  systemd:
+    name: containerd
+    state: restarted
+    enabled: true
+
 # Test Docker with NGINX
 - name: Run test nginx container
   docker_container:
