@@ -5,6 +5,7 @@ This repository contains a complete solution for automating, securing, and deplo
 It is structured with best practices, demonstrating strong command of DevOps tooling and modern CI/CD practices.
 
 ---
+#
 
 ## Repository Structure
 
